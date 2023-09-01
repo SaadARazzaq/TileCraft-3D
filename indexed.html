@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛣️🚶</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden;   
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <script>
+
+        const renderer = new THREE.WebGLRenderer();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const scene = new THREE.Scene();
+
+        const aspectRatio = window.innerWidth / window.innerHeight;
+
+        const camera = new THREE.PerspectiveCamera(
+            75, 
+            aspectRatio, 
+            0.1, 
+            1000
+        );
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        document.body.appendChild(renderer.domElement);
+
+        const orbit = new THREE.OrbitControls(camera, renderer.domElement);
+
+        camera.position.set(10, 15, -22);
+
+        orbit.update();
+
+        // Create a mere 20 by 20 plane
+        const planeMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(20,20),
+            new THREE.MeshBasicMaterial({
+                side: THREE.DoubleSide,
+                visible: false  // Make the plane invisible but still present in the scene
+            })
+        )
+        planeMesh.rotateX(-Math.PI/2);
+        scene.add(planeMesh);
+        planeMesh.name = 'ground';
+
+
+        const sphereMesh = new THREE.Mesh(  //  This mesh is responsible for whenever the mouse click event is detected
+            new THREE.SphereGeometry(0.4, 4, 2),
+            new THREE.MeshBasicMaterial({
+                wireframe: true,
+                color: 0xFFEA00
+            })
+        );
+
+        // Create wall mesh
+        const wallMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 2, 1),
+            new THREE.MeshBasicMaterial({
+                // wireframe: true,
+                color: 0x00FF00
+            })
+        );
+
+        /*
+
+        // function generateWalls(wallPositions) {
+        //     wallPositions.forEach(function(position) {
+        //         const wallClone = wallMesh.clone();
+        //         wallClone.position.set(position.x, 1, position.z);
+                
+        //         scene.add(wallClone);
+        //     });
+        // }
+
+        
+
+        // Example: Generate walls at specific tile positions
+        // generateWalls([
+        //     {x: 3, z: 3},
+        //     {x: 5, z: 5},
+        //     {x: 7, z: 7}
+        // ]);
+
+        */
+
+        const objects = [];
+
+
+        window.addEventListener('mousedown', function(){  // Make sure user is clicking on plane before clicking on the object by looping through the intersection function
+            const objectExist = objects.find(function(object){  // Locks that only one object can come at one tile, no more than one object at the same tile
+                return (object.position.x === tileMesh.position.x)
+                && (object.position.z === tileMesh.position.z)
+            });
+            if(!objectExist){
+                intersects.forEach(function(intersect){
+                    if(intersect.object.name === 'ground'){
+                        const sphereClone = sphereMesh.clone(); // if the plane exists in the intersects array then a copy is going to be created by calling the clone method on the sphereMesh object
+                        sphereClone.position.copy(tileMesh.position);  // We will call the copy to set the position of sphereMesh Clone in the scene
+                        scene.add(sphereClone);
+                        objects.push(sphereClone);
+                        tileMesh.material.color.setHex(0xFF0000); // If an object present on tile, then set color to red
+                    }
+                });
+            }
+        });
+
+        function animate(time){
+            tileMesh.material.opacity = 1 + Math.sin(time/180); // For blinking of tile
+            objects.forEach(function(object){
+                object.rotation.x = time/1000;  // For rotation of object in x axis
+                object.rotation.z = time/1000;  // For rotation of object in z axis
+                object.position.y = 0.5 + 0.5 * Math.abs(Math.sin(time/1000));  // For bouncyness of cube/objects
+            });
+            renderer.render(scene, camera);
+        }
+
+        // Add grid using the GridHelper and place it on the top of the plane
+        const grid = new THREE.GridHelper(20,20);
+        scene.add(grid);
+
+        
+        // Create tile square
+        const tileMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(1,1),
+            new THREE.MeshBasicMaterial({
+                side: THREE.DoubleSide,
+                transparent: true
+            })
+        )
+        tileMesh.rotateX(-Math.PI/2);
+        tileMesh.position.set(0.5, 0, 0.5); // Fits the tileMesh into the proper square
+        scene.add(tileMesh);
+
+        // Create variables for the raycaster
+        const mousePosition = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+        let intersects;
+        window.addEventListener('mousemove', function(e){
+            mousePosition.x = (e.clientX/window.innerWidth) * 2 - 1;
+            mousePosition.y = -(e.clientY/window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mousePosition, camera);
+            intersects = raycaster.intersectObjects(scene.children);
+            intersects.forEach(function(intersect){
+                if(intersect.object.name === 'ground'){
+                    const tilePos = new THREE.Vector3().copy(intersect.point).floor().addScalar(0.5);  // This variable contains the position where the highlightMesh or tileMesh must be set at means that where there will be the mouse intersection, it will be captured in this variable
+                    tileMesh.position.set(tilePos.x, 0, tilePos.z);  // Reposition the tileMesh to the mouse where ever it goes using the values calculated from the above line
+                }
+
+                const objectExist = objects.find(function(object){  // Locks that only one object can come at one tile, no more than one object at the same tile
+                    return (object.position.x === tileMesh.position.x)
+                    && (object.position.z === tileMesh.position.z)
+                });
+
+                if(!objectExist){
+                    tileMesh.material.color.setHex(0xFFFFFF); // If no object present on tile, then set color to white
+                }
+                else{
+                    tileMesh.material.color.setHex(0xFF0000); // If an object present on tile, then set color to red
+                }
+            });
+        });
+
+        renderer.setAnimationLoop(animate);
+
+        function onWindowResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        }
+
+        window.addEventListener('resize', onWindowResize, false);
+
+
+    </script>
+</body>
+</html>
+
+
