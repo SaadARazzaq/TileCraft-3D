@@ -1,0 +1,20 @@
+------------------------------------- Main Idea for Plane Implementation -------------------------------------
+
+1. Detect position of cursor on the plane(intersection of x and y axial points) --> Raycaster Class
+
+2. Get the Largest integer less than or equal to each one of the vector components e.g. if cursor position is (1.5 x-axis) and (2.3 y- axis) then floor will return 1 and 2 respectively, if (3.9 x-axis) and (-1.1 y-axis) then floor will return 3 and -1 respectively. Because if we see on plane the whole area of one complete square(tile) has value(distance) 1.0 to 1.99, then second complete square(tile) has value(distance) 2.0 to 2.99, third complete square(tile) has value(distance) 3.0 to 3.99 and so on. Where ever the cursor is on that one particular square(tile) of a plane or second square(tile) of a plane, it will be considered as 1 square(tile) or 2 square(tile) --> Call floor() method on position vector of cursor
+
+- Suppose Below is the plane
+ ___ ___ ___
+|   |   |   |
+| 1 | 2 | 3 |  <--- 1st , 2nd and 3rd tile of plane containing 9 total tiles
+|___|___|___|
+|   |   |   |
+| 4 | 5 | 6 |  <--- 4th , 5th and 6th tile of plane containing 9 total tiles
+|___|___|___|
+|   |   |   |
+| 7 | 8 | 9 |  <--- 7th , 8th and 9th tile of plane containing 9 total tiles
+|___|___|___|
+
+
+3. Create a one by one plane serving as indicator of cursor on a certain square(tile) of the plane and position it using the values returned by the floor(). Keep in mind that when we add or position an object in the scene on a square(tile), Three.JS shifts the square(tile) shifts the square by the half of its size. To solve this issue, we add the half of the values returned by the floor() and thats the main idea.
