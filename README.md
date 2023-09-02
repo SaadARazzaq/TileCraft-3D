@@ -26,7 +26,7 @@ TileCraft 3D is a captivating web application integrated with `Three.JS` that al
 You can run TileCraft 3D directly in your web browser. Here's how:
 
 1. Clone this repository to your local machine.
-2. Open the `indexed.html` file in your preferred web browser.
+2. Open the `index.html` file in your preferred web browser.
 3. Explore and create in the 3D grid world!
 
 ## Customization 🎨
